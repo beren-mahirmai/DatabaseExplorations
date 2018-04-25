@@ -7,6 +7,7 @@ using NUnit.Framework;
 
 namespace Tests
 {
+    [TestFixture, Ignore("I haven't finished this yet")]
     public class BinarySearchTreeTests
     {
         Faker DataFaker = new Faker();

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 namespace Tests
 {
+    [TestFixture]
     public class KeyValueStore2Tests
     {
         private Faker Faker = new Faker("en");
