@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 namespace Tests
 {
+    [TestFixture]
     public class BloomFilterTests
     {
         Faker DataFaker = new Faker();
