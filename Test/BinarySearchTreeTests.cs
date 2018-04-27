@@ -27,7 +27,9 @@ namespace Tests
             var tree = new BinarySearchTree<String>(StringComparer.CurrentCultureIgnoreCase);
             List<String> dataAdded = GenData(20);
             List<String> dataExcluded = GenData(20);
+            Assert.AreEqual(0, tree.Count);
             dataAdded.ForEach(x => tree.Add(x));
+            Assert.AreEqual(20, tree.Count);
             dataAdded.ForEach(x => Assert.IsTrue(tree.Contains(x)));
             dataExcluded.ForEach(x => Assert.IsFalse(tree.Contains(x)));
         }
@@ -39,10 +41,16 @@ namespace Tests
             dataAdded.ForEach(x => tree.Add(x));
             String[] sortedData = tree.ToSortedArray();
 
+            // The result should be the expected length
+            Assert.AreEqual(20, sortedData.Length);
+
+            // Each input element must be represented
+            Assert.False(dataAdded.Any(x => !sortedData.Contains(x)));
+
+            // The elements should all be sorted
             Boolean containsUnsortedElements = Enumerable
                 .Range(1, sortedData.Length)
                 .Any(i => String.Compare(sortedData[i-1], sortedData[i], StringComparison.CurrentCultureIgnoreCase) > 0);
-
             Assert.False(containsUnsortedElements);
         }
     }

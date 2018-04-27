@@ -12,11 +12,14 @@ namespace DBLib
 
         private Node Root = null;
 
+        public Int32 Count { get; private set; } = 0;
+
         public BinarySearchTree(IComparer<T> comparer) {
             Comparer = comparer;
         }
 
         public void Add(T newValue) {
+            Count++;
             if(Root == null) {
                 Root = new Node(newValue);
                 return;
@@ -24,7 +27,7 @@ namespace DBLib
             Node current = Root;
             while(true) {
                 if(Comparer.Compare(current.Value, newValue) > 0) {
-                    // current.Value > newValue
+                    // current.Value > value
                     if(current.LowerValues == null) {
                         current.LowerValues = new Node(newValue);
                         break;
@@ -33,7 +36,7 @@ namespace DBLib
                         continue;
                     }
                 } else {
-                    // current.Value <= newValue
+                    // current.Value <= value
                     if(current.HigherValues == null) {
                         current.HigherValues = new Node(newValue);
                         break;
@@ -45,13 +48,16 @@ namespace DBLib
             }
         }
 
-        private static Node FindClosestLeaf(Node root, T value, IComparer<T> comparer) {
-            Node current = root;
+        public Boolean Contains(T value) {
+            Node current = Root;
             while(true) {
-                if(comparer.Compare(current.Value, value) > 0) {
+                Int32 compareResult = Comparer.Compare(current.Value, value);
+                if(compareResult == 0) {
+                    return true;
+                } else if(compareResult > 0) {
                     // current.Value > value
                     if(current.LowerValues == null) {
-                        return current;
+                        return false;
                     } else {
                         current = current.LowerValues;
                         continue;
@@ -59,21 +65,26 @@ namespace DBLib
                 } else {
                     // current.Value <= value
                     if(current.HigherValues == null) {
-                        return current;
+                        return false;
                     } else {
                         current = current.HigherValues;
                         continue;
                     }
                 }
-            }        
-        }
-
-        public Boolean Contains(T obj) {
-            throw new NotImplementedException();
+            }
         }
 
         public T[] ToSortedArray() {
-            throw new NotImplementedException();
+            return new T[0];
+            // T[] result = new T[Count];
+            // if(Root == null) {
+            //     return result;
+            // }
+            // Int32 index = 0;
+            // Node current = Root;
+            // while(true) {
+                
+            // }
         }
 
         private class Node {
