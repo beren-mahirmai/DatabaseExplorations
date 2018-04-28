@@ -1,34 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Bogus;
+using Test.Util;
 using DBLib;
 using NUnit.Framework;
 
-namespace Tests
+namespace Test
 {
     [TestFixture]
     public class BinarySearchTreeTests
     {
-        Faker DataFaker = new Faker();
-
-        // Generates a list of random strings we can use to test the BloomFilter.
-        private Int64 dataCounter = 0;
-        private List<String> GenData(Int32 size) {
-            var list = new List<String>(size);
-            for(var i=0; i<size; i++) {
-                list.Add(DataFaker.Hacker.Phrase() + dataCounter);
-                dataCounter++;
-            }
-            return list;
-        }
+        private DataGen dataGen = new DataGen();
 
         [Test]
         public void TestAddMultipleElements()
         {
             var tree = new BinarySearchTree<String>(StringComparer.CurrentCultureIgnoreCase);
-            List<String> dataAdded = GenData(20);
-            List<String> dataExcluded = GenData(20);
+            List<String> dataAdded = dataGen.GenStrings(20);
+            List<String> dataExcluded = dataGen.GenStrings(20);
             Assert.AreEqual(0, tree.Count);
             dataAdded.ForEach(x => tree.Add(x));
             Assert.AreEqual(20, tree.Count);
@@ -39,7 +28,7 @@ namespace Tests
         [Test]
         public void TestToSortedArray() {
             var tree = new BinarySearchTree<String>(StringComparer.CurrentCultureIgnoreCase);
-            List<String> dataAdded = GenData(20);
+            List<String> dataAdded = dataGen.GenStrings(20);
             dataAdded.ForEach(x => tree.Add(x));
             String[] sortedData = tree.ToSortedArray();
 

@@ -33,30 +33,18 @@ namespace DBLib
             } 
             Node current = Root;
             while(true) {
-                Int32 compareResult = Comparer.Compare(current.Value, newValue);
-                if(compareResult == 0) {
-                    break; // already in the tree, so no op
-                } else if(compareResult > 0) {
-                    // current.Value > value
-                    if(current.LowerValues == null) {
-                        Count++;
-                        current.LowerValues = new Node(newValue);
-                        break;
-                    } else {
-                        current = current.LowerValues;
-                        continue;
-                    }
-                } else {
-                    // current.Value < value
-                    if(current.HigherValues == null) {
-                        Count++;
-                        current.HigherValues = new Node(newValue);
-                        break;
-                    } else {
-                        current = current.HigherValues;
-                        continue;
-                    }
+                Path path = GetPathForValueOnNode(current, newValue);
+                if(path == Path.Current) { // we found a match, so do nothing
+                    break;
                 }
+                Node nextNode = current.GetNodeForPath(path);
+                if(nextNode == null) {
+                    // This is the path the value should go on, but it is empty, so that's the node to set
+                    current.SetValueForPath(newValue, path); 
+                    Count++;
+                    break;   
+                }
+                current = nextNode;
             }
         }
 
@@ -65,28 +53,14 @@ namespace DBLib
         // withiout encountering it.
         public Boolean Contains(T value) {
             Node current = Root;
-            while(true) {
-                Int32 compareResult = Comparer.Compare(current.Value, value);
-                if(compareResult == 0) {
+            while(current != null) {
+                Path path = GetPathForValueOnNode(current, value);
+                if(path == Path.Current) {
                     return true;
-                } else if(compareResult > 0) {
-                    // current.Value > value
-                    if(current.LowerValues == null) {
-                        return false;
-                    } else {
-                        current = current.LowerValues;
-                        continue;
-                    }
-                } else {
-                    // current.Value < value
-                    if(current.HigherValues == null) {
-                        return false;
-                    } else {
-                        current = current.HigherValues;
-                        continue;
-                    }
                 }
+                current = current.GetNodeForPath(path);
             }
+            return false;
         }
 
         // This takes the values, which are sorted in the tree but may be scattered about the
@@ -113,6 +87,16 @@ namespace DBLib
                 }
             }
             return result;
+        }
+
+        // While walking a tree to find a value x, decide if we should look on the low or high branch,
+        // or let us know if the supplied node is an exact match.
+        private Path GetPathForValueOnNode(Node node, T x) {
+            Int32 compareResult = Comparer.Compare(node.Value, x);
+            return
+                compareResult > 0 ? Path.Lower :
+                compareResult < 0 ? Path.Higher :
+                Path.Current;
         }
 
         // This method is intended to support ToSortedArray() by encapsulating the logic of deciding
@@ -163,12 +147,43 @@ namespace DBLib
         // Represents a single node of the tree, with a current value and two subtrees, one for values lower
         // than the node's value, one with the values which are higher.
         private class Node {
-            public T Value;
-            public Node LowerValues;
-            public Node HigherValues;
+            public readonly T Value;
+            public Node LowerValues {get; private set; }
+            public Node HigherValues {get; private set;}
 
             public Node(T value) {
                 Value = value;
+            }
+
+            // Sets the higher or lower value, assuming that subtree is null.
+            public void SetValueForPath(T newValue, Path path) {
+                if(path == Path.Lower && LowerValues == null) {
+                    LowerValues = new Node(newValue);
+                    return;
+                }
+
+                if(path == Path.Higher && HigherValues == null) {
+                    HigherValues = new Node(newValue);
+                    return;
+                }
+                throw new Exception($"Invalid attempt to set value, node='${Value}',  newValue='${newValue}', low='${LowerValues}', high='${HigherValues}'");
+            }
+
+            // Get a requested node reference.
+            public Node GetNodeForPath(Path path) {
+                if(path == Path.Back) {
+                    throw new Exception("Invalid use of Path.Back");
+                }
+                return
+                    path == Path.Lower ? LowerValues :
+                    path == Path.Higher ? HigherValues :
+                    path == Path.Current ? this :
+                    throw new Exception("This should not have happened");
+            }
+
+            // This is only used to build exception messages.
+            public override String ToString() {
+                return $"Node:${Value}";
             }
         }
     }
