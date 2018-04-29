@@ -15,22 +15,22 @@ namespace Test
         [Test]
         public void TestAddMultipleElements()
         {
-            var tree = new BinarySearchTree<String>(StringComparer.CurrentCultureIgnoreCase);
-            List<String> dataAdded = dataGen.GenStrings(20);
-            List<String> dataExcluded = dataGen.GenStrings(20);
+            var tree = new BinarySearchTree<String>();
+            List<KeyValuePair<String, String>> dataAdded = dataGen.GenKeyValuePairs(20);
+            List<KeyValuePair<String, String>> dataExcluded = dataGen.GenKeyValuePairs(20);
             Assert.AreEqual(0, tree.Count);
-            dataAdded.ForEach(x => tree.Add(x));
+            dataAdded.ForEach(x => tree.Add(x.Key, x.Value));
             Assert.AreEqual(20, tree.Count);
-            dataAdded.ForEach(x => Assert.IsTrue(tree.Contains(x)));
-            dataExcluded.ForEach(x => Assert.IsFalse(tree.Contains(x)));
+            dataAdded.ForEach(x => Assert.IsTrue(tree.Contains(x.Key)));
+            dataExcluded.ForEach(x => Assert.IsFalse(tree.Contains(x.Key)));
         }
 
         [Test]
         public void TestToSortedArray() {
-            var tree = new BinarySearchTree<String>(StringComparer.CurrentCultureIgnoreCase);
-            List<String> dataAdded = dataGen.GenStrings(20);
-            dataAdded.ForEach(x => tree.Add(x));
-            String[] sortedData = tree.ToSortedArray();
+            var tree = new BinarySearchTree<String>();
+            List<KeyValuePair<String, String>> dataAdded = dataGen.GenKeyValuePairs(20);
+            dataAdded.ForEach(x => tree.Add(x.Key, x.Value));
+            KeyValuePair<String, String>[] sortedData = tree.ToSortedArray();
 
             // The result should be the expected length
             Assert.AreEqual(20, sortedData.Length);
@@ -41,7 +41,7 @@ namespace Test
             // The elements should all be sorted
             Boolean containsUnsortedElements = Enumerable
                 .Range(1, sortedData.Length-1)
-                .Any(i => String.Compare(sortedData[i-1], sortedData[i], StringComparison.CurrentCultureIgnoreCase) > 0);
+                .Any(i => String.Compare(sortedData[i-1].Key, sortedData[i].Key, StringComparison.CurrentCultureIgnoreCase) > 0);
             Assert.False(containsUnsortedElements);
         }
     }
