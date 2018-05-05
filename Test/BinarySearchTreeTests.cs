@@ -15,28 +15,31 @@ namespace Test
         [Test]
         public void TestAddMultipleElements()
         {
-            var tree = new BinarySearchTree<String>();
+            var tree = new BinarySearchTree();
             List<KeyValuePair<String, String>> dataAdded = dataGen.GenKeyValuePairs(20);
             List<KeyValuePair<String, String>> dataExcluded = dataGen.GenKeyValuePairs(20);
             Assert.AreEqual(0, tree.Count);
             dataAdded.ForEach(x => tree.Add(x.Key, x.Value));
             Assert.AreEqual(20, tree.Count);
             dataAdded.ForEach(x => Assert.IsTrue(tree.Contains(x.Key)));
+            dataAdded.ForEach(x => Assert.IsTrue(tree.Get<String>(x.Key) == x.Value));
             dataExcluded.ForEach(x => Assert.IsFalse(tree.Contains(x.Key)));
         }
 
         [Test]
         public void TestToSortedArray() {
-            var tree = new BinarySearchTree<String>();
+            var tree = new BinarySearchTree();
             List<KeyValuePair<String, String>> dataAdded = dataGen.GenKeyValuePairs(20);
             dataAdded.ForEach(x => tree.Add(x.Key, x.Value));
-            KeyValuePair<String, String>[] sortedData = tree.ToSortedArray();
+            KeyValuePair<String, Object>[] sortedData = tree.ToSortedArray();
 
             // The result should be the expected length
             Assert.AreEqual(20, sortedData.Length);
 
             // Each input element must be represented
-            Assert.False(dataAdded.Any(x => !sortedData.Contains(x)));
+            dataAdded.ForEach(kvpIn => {
+                Assert.IsTrue(((String) sortedData.First(y => y.Key == kvpIn.Key).Value) == kvpIn.Value);
+            });
 
             // The elements should all be sorted
             Boolean containsUnsortedElements = Enumerable

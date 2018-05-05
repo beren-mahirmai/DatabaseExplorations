@@ -7,7 +7,7 @@ namespace DBLib
     // Contains a set of key/value pairs, sorted by the key which is a string.
     // This is a recursive algorithm, but recursion is bad in languages without tail call optimization.
     // We're using an iterative approach to avoid OutOfMemoryException in very large sets.
-    public class BinarySearchTree<T>
+    public class BinarySearchTree
     {
         private readonly IComparer<String> Comparer = StringComparer.CurrentCultureIgnoreCase;
         private Node Root = null;
@@ -22,7 +22,7 @@ namespace DBLib
         // node there with the path in question.
         // If an attempt to add a duplicate is made, we eventually find it and return, resulting in
         // a no-op.
-        public void Add(String newKey, T newValue) {
+        public void Add(String newKey, Object newValue) {
             if(Root == null) {
                 Count = 1;
                 Root = new Node(newKey, newValue);
@@ -60,10 +60,23 @@ namespace DBLib
             return false;
         }
 
+        // Retrieve a value stored in the BinarySearchTree based on it's key.
+        public T Get<T>(String key) {
+            Node current = Root;
+            while(current != null) {
+                Path path = GetPathForValueOnNode(current, key);
+                if(path == Path.Current) {
+                    return (T) current.Value;
+                }
+                current = current.GetNodeForPath(path);
+            }
+            return default(T);
+        }
+
         // This takes the pairs, which are sorted in the tree but may be scattered about the
         // heap, and walks the tree and copies the pairs into an array in the correct order.
-        public KeyValuePair<String, T>[] ToSortedArray() {
-            var result = new KeyValuePair<String, T>[Count];
+        public KeyValuePair<String, Object>[] ToSortedArray() {
+            var result = new KeyValuePair<String, Object>[Count];
             if(Root == null) {
                 return result;
             }
@@ -78,7 +91,7 @@ namespace DBLib
                     nodeStack.Push(nodeStack.Peek().HigherValues);
                 } else if (next == Path.Current) {
                     Node currentNode = nodeStack.Peek();
-                    result[index] = new KeyValuePair<String, T>(currentNode.Key, currentNode.Value);
+                    result[index] = new KeyValuePair<String, Object>(currentNode.Key, currentNode.Value);
                     index++;
                 } else { // next == Path.Back
                     nodeStack.Pop();
@@ -126,17 +139,17 @@ namespace DBLib
         // than the node's value, one with the values which are higher.
         private class Node {
             public readonly String Key;
-            public readonly T Value;
+            public readonly Object Value;
             public Node LowerValues {get; private set; }
             public Node HigherValues {get; private set;}
 
-            public Node(String key, T value) {
+            public Node(String key, Object value) {
                 Key = key;
                 Value = value;
             }
 
             // Sets the higher or lower value, assuming that subtree is null.
-            public void SetValueForPath(String newKey, T newValue, Path path) {
+            public void SetValueForPath(String newKey, Object newValue, Path path) {
                 if(path == Path.Lower && LowerValues == null) {
                     LowerValues = new Node(newKey, newValue);
                     return;
