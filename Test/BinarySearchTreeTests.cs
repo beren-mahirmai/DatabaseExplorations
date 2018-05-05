@@ -19,7 +19,7 @@ namespace Test
             List<KeyValuePair<String, String>> dataAdded = dataGen.GenKeyValuePairs(20);
             List<KeyValuePair<String, String>> dataExcluded = dataGen.GenKeyValuePairs(20);
             Assert.AreEqual(0, tree.Count);
-            dataAdded.ForEach(x => tree.Add(x.Key, x.Value));
+            dataAdded.ForEach(x => tree.Set(x.Key, x.Value));
             Assert.AreEqual(20, tree.Count);
             dataAdded.ForEach(x => Assert.IsTrue(tree.Contains(x.Key)));
             dataAdded.ForEach(x => Assert.IsTrue(tree.Get<String>(x.Key) == x.Value));
@@ -30,7 +30,7 @@ namespace Test
         public void TestToSortedArray() {
             var tree = new BinarySearchTree();
             List<KeyValuePair<String, String>> dataAdded = dataGen.GenKeyValuePairs(20);
-            dataAdded.ForEach(x => tree.Add(x.Key, x.Value));
+            dataAdded.ForEach(x => tree.Set(x.Key, x.Value));
             KeyValuePair<String, Object>[] sortedData = tree.ToSortedArray();
 
             // The result should be the expected length

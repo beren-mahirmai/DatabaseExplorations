@@ -22,7 +22,7 @@ namespace DBLib
         // node there with the path in question.
         // If an attempt to add a duplicate is made, we eventually find it and return, resulting in
         // a no-op.
-        public void Add(String newKey, Object newValue) {
+        public void Set(String newKey, Object newValue) {
             if(Root == null) {
                 Count = 1;
                 Root = new Node(newKey, newValue);
@@ -31,7 +31,8 @@ namespace DBLib
             Node current = Root;
             while(true) {
                 Path path = GetPathForValueOnNode(current, newKey);
-                if(path == Path.Current) { // we found a match, so do nothing
+                if(path == Path.Current) { // we found a match, so update the node
+                    current.Value = newValue;
                     break;
                 }
                 Node nextNode = current.GetNodeForPath(path);
@@ -70,7 +71,7 @@ namespace DBLib
                 }
                 current = current.GetNodeForPath(path);
             }
-            return default(T);
+            throw new Exception($"'{key}' not found");
         }
 
         // This takes the pairs, which are sorted in the tree but may be scattered about the
@@ -139,7 +140,7 @@ namespace DBLib
         // than the node's value, one with the values which are higher.
         private class Node {
             public readonly String Key;
-            public readonly Object Value;
+            public Object Value;
             public Node LowerValues {get; private set; }
             public Node HigherValues {get; private set;}
 
