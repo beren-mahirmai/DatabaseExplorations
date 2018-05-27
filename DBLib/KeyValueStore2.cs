@@ -22,32 +22,11 @@ namespace DBLib
         // Maximum size of cache before writing to disk
         private const Int32 DataPageSize = 1024;
 
+        // A utility for serializing data
+        private readonly ObjectSerializer Serializer = new ObjectSerializer();
+
         public T Get<T>(String key) {  
             return Cache.Get<T>(key);
-        }
-
-        // Converts each object to a sequence of bytes suitable for writing to a binary file.
-        private static Byte[] SerializeObject(Object obj) {
-            Byte[] bytes;
-            var formatter = new BinaryFormatter();
-            using (var ms = new MemoryStream())
-            {
-                formatter.Serialize(ms, obj);
-                ms.Position = 0;
-                bytes = ms.GetBuffer();
-            }
-            return bytes;
-        }
-
-        // Converts a sequence of bytes into an Object of the requested type.
-        private static T DeserializeObject<T>(Byte[] bytes) {
-            T result;
-            var formatter = new BinaryFormatter();
-            using (var ms = new MemoryStream(bytes))
-            {
-                 result = (T)formatter.Deserialize(ms);                         
-            }
-            return result;
         }
 
         // Appends a new entry to the end of the file

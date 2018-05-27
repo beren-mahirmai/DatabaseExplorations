@@ -17,6 +17,9 @@ namespace DBLib
         // Handles to the data file and temp file
         private FileStream DataFileStream;
 
+        // A utility for serializing data
+        private readonly ObjectSerializer Serializer = new ObjectSerializer();
+
         public T Get<T>(String key) {  
             Int32 requestedHash = key.GetHashCode();
             T result = default(T);
@@ -24,7 +27,7 @@ namespace DBLib
             ForEachRecord(DataFileStream, (hash, getValueBytes) => {
                 if(hash != requestedHash) return true; // continue looking
                 Byte[] valueBytes = getValueBytes();
-                result = DeserializeObject<T>(valueBytes);
+                result = Serializer.Deserialize<T>(valueBytes);
                 valueFound = true;
                 return false; // stop iteration, we found what we need
             });
@@ -74,34 +77,10 @@ namespace DBLib
             }
         }
 
-        // Converts each object to a sequence of bytes suitable for writing to a binary file.
-        private static Byte[] SerializeObject(Object obj) {
-            Byte[] bytes;
-            var formatter = new BinaryFormatter();
-            using (var ms = new MemoryStream())
-            {
-                formatter.Serialize(ms, obj);
-                ms.Position = 0;
-                bytes = ms.GetBuffer();
-            }
-            return bytes;
-        }
-
-        // Converts a sequence of bytes into an Object of the requested type.
-        private static T DeserializeObject<T>(Byte[] bytes) {
-            T result;
-            var formatter = new BinaryFormatter();
-            using (var ms = new MemoryStream(bytes))
-            {
-                 result = (T)formatter.Deserialize(ms);                         
-            }
-            return result;
-        }
-
         // Appends a new entry to the end of the file
         public void Set(String key, Object value) {
             Int32 hash = key.GetHashCode();
-            Byte[] valueBytes = SerializeObject(value);
+            Byte[] valueBytes = Serializer.Serialize(value);
             WriteRecord(hash, valueBytes);
         }
 
