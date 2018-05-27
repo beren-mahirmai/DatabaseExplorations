@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace DBLib
 {
+    [Serializable]
     public class BloomFilter
     {
         // The size of the bit array.

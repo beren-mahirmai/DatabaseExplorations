@@ -3,6 +3,8 @@ using NUnit.Framework;
 using DBLib;
 using Test.Util;
 using System.Collections.Generic;
+using DBLib.Exceptions;
+using System.Linq;
 
 namespace Test
 {
@@ -64,77 +66,16 @@ namespace Test
                 Store.Set(kvp.Key, kvp.Value);
             }
 
-            Assert.Throws<Exception>(() => {
+            Assert.Throws<DataNotFoundException>(() => {
                 Store.Get<String>(unusedKey);
             });
         }
 
         [Test]
         public void ThrowsIfKeyNotFoundInEmptyDatabase() {
-            Assert.Throws<Exception>(() => {
+            Assert.Throws<DataNotFoundException>(() => {
                 Store.Get<String>("DummyKey");
             });
-        }
-
-        [Test]
-        public void SummaryOfMixedMultiUseKeys() {
-            // Add test data to the store.
-            List<KeyValuePair<String, String>> data = dataGen.GenKeyValuePairs(3);
-            foreach(KeyValuePair<String, String> kvp in data) {
-                Store.Set(kvp.Key, kvp.Value);
-            }
-
-            // Leave the first key alone, so it will have one entry in the file.
-            // The second entry will get overwritten once, so it has 2 entries.
-            // The third will be overwritten twice, so it will have 3 entries.
-            Store.Set(data[1].Key, dataGen.GenString());
-            Store.Set(data[2].Key, dataGen.GenString());
-            Store.Set(data[2].Key, dataGen.GenString());
-
-            // Get the stats and verify we see 3 entries, and the expected counts
-            // appear.  Since we know the keys, we can calculate each has and make
-            // sure the expected counts appear.
-            Dictionary<Int32, Int32> stats = Store.GetStats();
-            Assert.AreEqual(3, stats.Count);
-            Assert.AreEqual(stats[data[0].Key.GetHashCode()], 1);
-            Assert.AreEqual(stats[data[1].Key.GetHashCode()], 2);
-            Assert.AreEqual(stats[data[2].Key.GetHashCode()], 3);
-        }
-
-        [Test]
-        public void CompactData() {
-            // Add test data to the store.
-            List<KeyValuePair<String, String>> data = dataGen.GenKeyValuePairs(3);
-            foreach(KeyValuePair<String, String> kvp in data) {
-                Store.Set(kvp.Key, kvp.Value);
-            }
-
-            // Change each value at least once, but keep the final value of each.
-            String finalA = dataGen.GenString();
-            String finalB = dataGen.GenString();
-            String finalC = dataGen.GenString();
-
-            Store.Set(data[1].Key, dataGen.GenString());
-            Store.Set(data[2].Key, dataGen.GenString());
-            Store.Set(data[2].Key, dataGen.GenString());
-
-            Store.Set(data[0].Key, finalA);
-            Store.Set(data[1].Key, finalB);
-            Store.Set(data[2].Key, finalC);
-
-            // Compact the database, then only the most recent values should remain.
-            Store.Compact();
-
-            // Check the state of the database, there should be one entry for each
-            // key which contains the most recent value.
-            Dictionary<Int32, Int32> stats = Store.GetStats();
-            Assert.AreEqual(3, stats.Count);
-            Assert.AreEqual(stats[data[0].Key.GetHashCode()], 1);
-            Assert.AreEqual(stats[data[1].Key.GetHashCode()], 1);
-            Assert.AreEqual(stats[data[2].Key.GetHashCode()], 1);
-            Assert.AreEqual(finalA, Store.Get<String>(data[0].Key));
-            Assert.AreEqual(finalB, Store.Get<String>(data[1].Key));
-            Assert.AreEqual(finalC, Store.Get<String>(data[2].Key));
         }
 
         [Test]
@@ -155,6 +96,35 @@ namespace Test
                 Store.Set(kvp.Key, kvp.Value);
             }
             Assert.IsFalse(Store.ContainsKey(dataGen.GenWord()));
+        }
+
+        [Test]
+        public void FindKeyInStoredDataPage() { 
+            String key = dataGen.GenWord();
+            String value = dataGen.GenString();
+
+            Store.Set(key, value);
+            for(var i = 0; i < 2000; i++) {
+                Store.Set($"x{i}x", $"y{i}y");
+            }
+
+            Assert.AreEqual(value, Store.Get<String>(key));
+        }
+
+        [Test]
+        public void FindKeyInMiddleStoredDataPage() {
+            String key = dataGen.GenWord();
+            String value = dataGen.GenString();
+
+            for(var i = 0; i < 3000; i++) {
+                Store.Set($"x{i}x", $"y{i}y");
+            }
+            Store.Set(key, value);
+            for(var i = 4000; i < 7000; i++) {
+                Store.Set($"x{i}x", $"y{i}y");
+            }
+
+            Assert.AreEqual(value, Store.Get<String>(key));
         }
 
         [Test, Explicit]

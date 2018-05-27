@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using DBLib.Exceptions;
 
 namespace DBLib
 {
@@ -12,6 +13,7 @@ namespace DBLib
     // search to find it very quickly.
     // The intent is for this structure to be serialized to disk, and then quickly read when a
     // value is being sought.
+    [Serializable]
     public class ImmutableDataPage
     {
         private readonly IComparer<String> Comparer = StringComparer.CurrentCultureIgnoreCase;
@@ -37,11 +39,11 @@ namespace DBLib
         }
 
         // This looks for the value using two speed-enhancing techniques.
-        // -The BloomFilter saves use from having to look for non-existant data
+        // -The BloomFilter saves us from having to look for non-existant data
         // -The data itself is pre-sorted, so we can use binary search to find elements quickly
         public T Get<T>(String key) {
             if(!Filter.Contains(key)) {
-                return default(T);
+                throw new DataNotFoundException(key);
             }
 
             Int32 windowStart = 0;

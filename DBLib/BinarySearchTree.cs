@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DBLib.Exceptions;
 
 namespace DBLib
 {
@@ -71,7 +72,7 @@ namespace DBLib
                 }
                 current = current.GetNodeForPath(path);
             }
-            throw new Exception($"'{key}' not found");
+            throw new DataNotFoundException(key);
         }
 
         // This takes the pairs, which are sorted in the tree but may be scattered about the

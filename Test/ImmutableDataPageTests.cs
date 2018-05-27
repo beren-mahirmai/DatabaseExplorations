@@ -4,6 +4,7 @@ using System.Linq;
 using Test.Util;
 using DBLib;
 using NUnit.Framework;
+using DBLib.Exceptions;
 
 namespace Test
 {
@@ -24,7 +25,7 @@ namespace Test
 
             Assert.AreEqual(testSize, dataPage.Count);
             dataAdded.ForEach(x => Assert.AreEqual(x.Value, dataPage.Get<String>(x.Key)));
-            dataExcluded.ForEach(x => Assert.AreEqual(null, dataPage.Get<String>(x.Key)));
+            dataExcluded.ForEach(x => Assert.Throws<DataNotFoundException>(() => dataPage.Get<String>(x.Key)));
         }
     }
 }
