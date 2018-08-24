@@ -27,5 +27,20 @@ namespace Test
             dataAdded.ForEach(x => Assert.AreEqual(x.Value, dataPage.Get<String>(x.Key)));
             dataExcluded.ForEach(x => Assert.Throws<DataNotFoundException>(() => dataPage.Get<String>(x.Key)));
         }
+
+        [Test]
+        public void ContainsCheckWorks()
+        {
+            Int32 testSize = 100;
+            var tree = new BinarySearchTree();
+            List<KeyValuePair<String, String>> dataAdded = dataGen.GenKeyValuePairs(testSize);
+            List<KeyValuePair<String, String>> dataExcluded = dataGen.GenKeyValuePairs(testSize);
+            dataAdded.ForEach(x => tree.Set(x.Key, x.Value));
+            var dataPage = new ImmutableDataPage(tree);
+
+            Assert.AreEqual(testSize, dataPage.Count);
+            dataAdded.ForEach(x => Assert.IsTrue(dataPage.Contains(x.Key)));
+            dataExcluded.ForEach(x => Assert.IsFalse(dataPage.Contains(x.Key)));
+        }
     }
 }

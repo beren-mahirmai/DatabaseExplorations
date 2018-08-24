@@ -62,6 +62,21 @@ namespace DBLib
             throw new DataNotFoundException(key);
         }
 
+        // This method is instrumentation so we can determine if the data is compacted correctly.
+        public Int32 CountInstances(String key) {
+            Int32 count = 0;
+            if(Cache.Contains(key)) count++;
+
+            ForEachDataPage(DataFileStream, dataPage => {
+                if(dataPage.Contains(key)) {
+                    count++;
+                }
+                return true; // always continue the loop, we want to look for all occurances
+            });
+
+            return count;
+        }
+
         // Adds a new entry to the store.  It adds it to the in-memory cache, then if the cache
         // is too large writes the cache to the disk.
         public void Set(String key, Object value) {
@@ -163,8 +178,9 @@ namespace DBLib
             throw new NotImplementedException();
         }
 
+        // Determine if the key exists in the store.
         public Boolean ContainsKey(String key) {
-            return Cache.Contains(key);
+            return this.CountInstances(key) > 0;
         }
     }
 }

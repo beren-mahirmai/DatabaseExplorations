@@ -38,12 +38,28 @@ namespace DBLib
                 .ForEach(key => Filter.Add(key));
         }
 
+        // Get the request value, or throw a DataNotFoundException if it is not found.
+        public T Get<T>(String key) {
+            Boolean found = SearchData<T>(key, out T value);
+            if(found) {
+                return value;
+            }
+            
+            throw new DataNotFoundException(key);
+        }
+
+        // Determines of the data page contains the selected key or not.
+        public Boolean Contains(String key) {
+            return SearchData<Object>(key, out Object dummy);
+        }
+
         // This looks for the value using two speed-enhancing techniques.
         // -The BloomFilter saves us from having to look for non-existant data
         // -The data itself is pre-sorted, so we can use binary search to find elements quickly
-        public T Get<T>(String key) {
+        private Boolean SearchData<T>(String key, out T value) {
             if(!Filter.Contains(key)) {
-                throw new DataNotFoundException(key);
+                value = default(T);
+                return false;
             }
 
             Int32 windowStart = 0;
@@ -53,15 +69,16 @@ namespace DBLib
                 String x = Data[middle].Key;
                 Int32 compareResult = Comparer.Compare(key, x);
                 if(compareResult == 0) {
-                    return (T)Data[middle].Value;
+                    value = (T)Data[middle].Value;
+                    return true;
                 } else if(compareResult > 0) {
                     windowStart = middle;
                 } else {
                     windowEnd = middle;
                 }
             }
-            // BloomFilters can give false positives, so we might end up here.
-            return default(T);
+            value = default(T);
+            return false;
         }
     }
 }

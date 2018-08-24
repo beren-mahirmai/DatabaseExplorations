@@ -127,6 +127,39 @@ namespace Test
             Assert.AreEqual(value, Store.Get<String>(key));
         }
 
+        [Test]
+        public void CountMultipleInstances() {
+            String key = dataGen.GenWord();
+            String valueA = dataGen.GenString();
+            String valueB = dataGen.GenString();
+            String valueC = dataGen.GenString();
+            String valueD = dataGen.GenString();
+
+            // Set the value three different times with a lot of dummy data
+            // in between.  This way the data gets divided between different 
+            // data pages.
+            Store.Set(key, valueA);
+            for(var i = 0; i < 3000; i++) {
+                Store.Set($"x{i}x", $"y{i}y");
+            }
+            Store.Set(key, valueB);
+            for(var i = 4000; i < 5500; i++) {
+                Store.Set($"x{i}x", $"y{i}y");
+            }
+            Store.Set(key, valueC);
+            for(var i = 5500; i < 7000; i++) {
+                Store.Set($"x{i}x", $"y{i}y");
+            }
+            Store.Set(key, valueD);
+
+            Assert.IsTrue(Store.ContainsKey(key));
+            Assert.AreEqual(4, Store.CountInstances(key));
+            Assert.IsTrue(Store.ContainsKey("x4444x"));
+            Assert.AreEqual(1, Store.CountInstances("x4444x"));
+            Assert.IsFalse(Store.ContainsKey("This Key Doesn't Exist"));
+            Assert.AreEqual(0, Store.CountInstances("This Key Doesn't Exist"));
+        }
+
         [Test, Explicit]
         // NOTE: To see the console output run "dotnet test -v d" for detailed output
         public void MeasurePerformance() {
