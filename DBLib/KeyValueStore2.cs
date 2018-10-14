@@ -41,16 +41,12 @@ namespace DBLib
 
             T result = default(T);
             Boolean found = false;
-            Int32 i = 0;
             ForEachDataPage(DataFileStream, dataPage => {
-                Console.WriteLine($"Exampining data page {i} for {key}");
                 try {
                     result = dataPage.Get<T>(key);
                     found = true;
-                    Console.WriteLine($"result: {result}, found: {found}");
-                    return false; // do not contiue, result was found
+                    return false; // do not continue, result was found
                 } catch(DataNotFoundException) {
-                    Console.WriteLine("continuing search");
                     return true; // continue looping, we haven't found the result yet
                 } catch(Exception) {
                     throw;
@@ -148,7 +144,6 @@ namespace DBLib
             Clear();
             Cache = new BinarySearchTree();
             DataFileStream = File.Create(DataFileName);
-            Console.WriteLine(DataFileStream.Name);
         }
 
         // Closes the file stream and removes any existing file from the disk.
@@ -159,23 +154,40 @@ namespace DBLib
             }
         }
 
-        // Retrieve a summary of the data file's contents as a dictionary.
-        //   Key: the hash of a key
-        //   Values: the number of times the key appears in the database
-        // Only the most recent value is ever retrieved from the database normally, but this gives us 
-        // some idea how much compacting work there is to do.  Notice that we can't actually retrieve
-        // the keys things were stored with, we only know the hashes.
-        public Dictionary<Int32, Int32> GetStats() {
-            throw new NotImplementedException();
-        }
-
         // Since we only append to the file when data is modified, which is fast, orphaned older values
         // for keys are left behind.  The compact process removes the old values from the file.
         // -Close the data file and rename it to a temp file name
         // -Create a new data file
         // -Go through the old data file and copy only the most recent data from it into the new file
         public void Compact() {
-            throw new NotImplementedException();
+            DataFileStream.Close();
+            // Just to be safe, look for the temp file name and if one already exists delete it.
+            if(File.Exists(TempFileName)) {
+                File.Delete(TempFileName);
+            }
+            File.Move(DataFileName, TempFileName); // backup the contents of the data file to temp
+            Initialize(); // creates a new instance of the data file
+
+            // Keep a list of keys we've already seen, so we know not to copy their values again
+            var previousKeys = new List<String>();
+            using(FileStream tempFileStream = File.Open(TempFileName, FileMode.Open)) {
+                // The first time we see each key is the most recent value for it, so we want to copy
+                // it to the new data file and never copy any other values we see for that hash later.
+                ForEachDataPage(tempFileStream, (dataPage) => {
+                    // Count backwards from the end, so the first instance of any key we find
+                    // will be the most recent.
+                    for(var i = dataPage.Data.Length-1; i >= 0; i--) {
+                        KeyValuePair<String, Object> kvp = dataPage.Data[i];
+                        if(previousKeys.Contains(kvp.Key)) continue;
+                        previousKeys.Add(kvp.Key);
+                        this.Set(kvp.Key, kvp.Value);
+                    }
+                    return true;  // continue iterating
+                });
+            }
+
+            // Delete the temp file since we don't need it anymore
+            File.Delete(TempFileName);
         }
 
         // Determine if the key exists in the store.

@@ -23,7 +23,7 @@ namespace DBLib
         private readonly BloomFilter Filter = new BloomFilter(8192, 3);
 
         // This data is pre-sorted, so we can efficiently find elements using binary search.
-        private readonly KeyValuePair<String, Object>[] Data;
+        public readonly KeyValuePair<String, Object>[] Data;
 
         public Int32 Count => Data.Count();
 
