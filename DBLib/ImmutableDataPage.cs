@@ -72,7 +72,10 @@ namespace DBLib
                     value = (T)Data[middle].Value;
                     return true;
                 } else if(compareResult > 0) {
-                    windowStart = middle;
+                    // We need to protect against the case where the start and end of the window are one apart.
+                    // In that case the middle will be calculated as the same as the start (because we use Floor()).
+                    // To prevent an infinit loop we look for this case and increment the start if this occurs.
+                    windowStart = windowStart != middle ? middle : windowStart + 1;
                 } else {
                     windowEnd = middle;
                 }
