@@ -160,6 +160,35 @@ namespace Test
             Assert.AreEqual(0, Store.CountInstances("This Key Doesn't Exist"));
         }
 
+        [Test]
+        public void CompactWorks() {
+
+            // Set a lot of data so it gets divided between different 
+            // data pages.
+            for(var i = 0; i < 9000; i++) {
+                Store.Set($"x{i}x", $"a{i}a");
+            }
+            for(var i = 0; i < 9000; i++) {
+                Store.Set($"x{i}x", $"b{i}b");
+            }
+            for(var i = 0; i < 9000; i++) {
+                Store.Set($"x{i}x", $"c{i}c");
+            }
+
+            Store.Compact();
+            
+            Assert.AreEqual(1, Store.CountInstances("x2000x"));
+            Assert.AreEqual("c2000c", Store.Get<String>("x2000x"));
+            Assert.AreEqual(1, Store.CountInstances("x4000x"));
+            Assert.AreEqual("c4000c", Store.Get<String>("x4000x"));
+            Assert.AreEqual(1, Store.CountInstances("x6000x"));
+            Assert.AreEqual("c6000c", Store.Get<String>("x6000x"));
+            Assert.AreEqual(1, Store.CountInstances("x8000x"));
+            Assert.AreEqual("c8000c", Store.Get<String>("x8000x"));
+            Assert.IsFalse(Store.ContainsKey("This Key Doesn't Exist"));
+            Assert.AreEqual(0, Store.CountInstances("This Key Doesn't Exist"));       
+        }
+
         [Test, Explicit]
         // NOTE: To see the console output run "dotnet test -v d" for detailed output
         public void MeasurePerformance() {
